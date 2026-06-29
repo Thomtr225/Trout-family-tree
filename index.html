@@ -141,7 +141,7 @@
   .stamp:hover .stamp-del { display: flex; }
 
   /* ── 5×7 Gallery lightbox ── */
-  .gallery-lb { position: fixed; inset: 0; background: rgba(10,14,20,0.96); z-index: 500; display: flex; flex-direction: column; }
+  .gallery-lb { position: fixed; inset: 0; background: rgba(10,14,20,0.96); z-index: 600; display: flex; flex-direction: column; }
   .gallery-lb.hidden { display: none; }
   .glb-header { display: flex; align-items: center; gap: 1rem; padding: 0.85rem 1.25rem; background: rgba(0,0,0,0.4); flex-shrink: 0; }
   .glb-title { color: #fff; font-family: Georgia, serif; font-size: 1rem; flex: 1; }
@@ -899,8 +899,9 @@ function openPerson(id) {
   const isAdmin = STATE.role === 'admin';
   bodyHTML += `<div class="detail-section"><h3>Photos${allPhotos.length ? ' (' + allPhotos.length + ')' : ''}</h3><div class="photo-strip" id="photo-strip-${id}">`;
   allPhotos.forEach((ph,i) => {
-    const delBtn = isAdmin ? `<span class="stamp-delete" onclick="deletePhoto('${id}',${i},event)" title="Remove">✕</span>` : '';
-    bodyHTML += `<div class="photo-stamp" onclick="openGalleryLb('${id}',${i})">${delBtn}<img src="${ph}" alt="photo ${i+1}" loading="lazy"></div>`;
+    const safeId = id.replace(/[@]/g, '_AT_');
+    const delBtn = isAdmin ? `<span class="stamp-delete" onclick="event.stopPropagation();deletePhoto('${id}',${i})" title="Remove">✕</span>` : '';
+    bodyHTML += `<div class="photo-stamp" data-pid="${id}" data-idx="${i}" onclick="openGalleryLb('${id}',${i})">${delBtn}<img src="${ph}" alt="photo ${i+1}" loading="lazy"></div>`;
   });
   if (isAdmin) {
     bodyHTML += `<div class="photo-stamp add-btn" onclick="triggerPhotoUpload('${id}')" title="Add photo">+</div>`;
@@ -916,7 +917,7 @@ function openPerson(id) {
     <button class="btn btn-accent" onclick="viewTreeFor('${id}')">View in tree</button>
     ${isAdmin ? `<button class="btn" onclick="openEditModal('${id}')">Edit person</button>` : ''}
     <button class="btn" onclick="setbioPerson('${id}')">Generate AI bio</button>
-    ${allPhotos.length ? `<button class="btn" onclick="openGalleryLb('${id}',0)">View gallery</button>` : ''}`;
+    ${allPhotos.length ? `<button class="btn" onclick="openGalleryLb('${id}',0)">View gallery (${allPhotos.length})</button>` : ''}`;
 
   document.getElementById('person-modal').classList.remove('hidden');
 }
@@ -925,7 +926,10 @@ function switchPerson(id) {
   document.getElementById('person-modal').classList.add('hidden');
   setTimeout(() => openPerson(id), 50);
 }
-function closeModal(e) { if (e.target === document.getElementById('person-modal')) closeModalBtn(); }
+function closeModal(e) { 
+  if (!document.getElementById('gallery-lb').classList.contains('hidden')) return;
+  if (e.target === document.getElementById('person-modal')) closeModalBtn(); 
+}
 function closeModalBtn() { document.getElementById('person-modal').classList.add('hidden'); }
 
 function viewTreeFor(id) {
@@ -1512,6 +1516,8 @@ let glbPersonId = null;
 let glbIndex = 0;
 
 function openGalleryLb(id, idx) {
+  // Stop any event from bubbling to modal backdrop
+  if (event && event.stopPropagation) event.stopPropagation();
   glbPersonId = id;
   glbIndex = idx || 0;
   const p = STATE.people[id];
