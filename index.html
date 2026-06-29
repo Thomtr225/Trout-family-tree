@@ -501,6 +501,21 @@
 
 <!-- Photo lightbox -->
 <input type="file" id="photo-upload-input" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+
+<!-- 5x7 Gallery Lightbox -->
+<div class="gallery-lb hidden" id="gallery-lb">
+  <div class="glb-header">
+    <div class="glb-title" id="glb-title"></div>
+    <button class="glb-close" onclick="closeGalleryLb()">Close ✕</button>
+  </div>
+  <div class="glb-main">
+    <button class="glb-nav prev" id="glb-prev" onclick="glbNav(-1)">&#8249;</button>
+    <div class="glb-img-wrap"><img id="glb-main-img" src="" alt=""></div>
+    <button class="glb-nav next" id="glb-next" onclick="glbNav(1)">&#8250;</button>
+  </div>
+  <div class="glb-caption" id="glb-caption"></div>
+  <div class="glb-strip" id="glb-strip"></div>
+</div>
 <!-- Tree search autocomplete dropdown (appended to body) -->
 <div id="autocomplete-tree" style="position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 4px 16px rgba(0,0,0,0.12); max-height:260px; overflow-y:auto; z-index:500; display:none; min-width:260px;"></div>
 <div id="autocomplete-bio" style="position:fixed; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:0 4px 16px rgba(0,0,0,0.12); max-height:260px; overflow-y:auto; z-index:500; display:none; min-width:260px;"></div>
@@ -1488,6 +1503,43 @@ function showToast(msg) {
 
 function closeEditModal(e) { if (e.target === document.getElementById('edit-modal')) closeEditModalBtn(); }
 function closeEditModalBtn() { document.getElementById('edit-modal').classList.add('hidden'); }
+
+
+// ═══════════════════════════════════════════
+// GALLERY LIGHTBOX
+// ═══════════════════════════════════════════
+let glbPersonId = null;
+let glbIndex = 0;
+
+function openGalleryLb(id, idx) {
+  glbPersonId = id;
+  glbIndex = idx || 0;
+  const p = STATE.people[id];
+  document.getElementById('glb-title').textContent = p ? personName(p) : '';
+  renderGlb();
+  document.getElementById('gallery-lb').classList.remove('hidden');
+}
+
+function renderGlb() {
+  const photos = STATE.photos[glbPersonId] || [];
+  if (!photos.length) return;
+  glbIndex = Math.max(0, Math.min(glbIndex, photos.length - 1));
+  const p = STATE.people[glbPersonId];
+
+  document.getElementById('glb-main-img').src = photos[glbIndex];
+  document.getElementById('glb-caption').textContent =
+    (glbIndex + 1) + ' of ' + photos.length + (p && personYears(p) ? '  ·  ' + personYears(p) : '');
+  document.getElementById('glb-prev').style.display = glbIndex > 0 ? 'flex' : 'none';
+  document.getElementById('glb-next').style.display = glbIndex < photos.length - 1 ? 'flex' : 'none';
+
+  document.getElementById('glb-strip').innerHTML = photos.map((ph, i) =>
+    '<img src="' + ph + '" class="glb-thumb' + (i === glbIndex ? ' active' : '') + '" onclick="glbGoTo(' + i + ')" loading="lazy">'
+  ).join('');
+}
+
+function glbNav(dir) { glbIndex += dir; renderGlb(); }
+function glbGoTo(i) { glbIndex = i; renderGlb(); }
+function closeGalleryLb() { document.getElementById('gallery-lb').classList.add('hidden'); }
 
 // ═══════════════════════════════════════════
 // CLOSE DROPDOWNS ON CLICK OUTSIDE
