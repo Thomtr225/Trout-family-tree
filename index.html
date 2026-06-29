@@ -557,9 +557,31 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     console.log('Firebase connected');
+    showDbStatus('✓ Connected to Trout Family Tree database', 'success');
   } catch(e) {
     console.warn('Firebase init failed:', e.message);
+    showDbStatus('⚠ Running in offline mode', 'warning');
   }
+}
+
+function showDbStatus(msg, type) {
+  const bar = document.getElementById('db-status-bar');
+  if (!bar) return;
+  bar.textContent = msg;
+  bar.style.display = 'block';
+  if (type === 'success') {
+    bar.style.background = '#1a3a2a';
+    bar.style.color = '#4caf84';
+  } else {
+    bar.style.background = '#3a2a1a';
+    bar.style.color = '#c49a2a';
+  }
+  // Fade out after 4 seconds
+  setTimeout(() => {
+    bar.style.transition = 'opacity 1s';
+    bar.style.opacity = '0';
+    setTimeout(() => { bar.style.display = 'none'; bar.style.opacity = '1'; }, 1000);
+  }, 4000);
 }
 
 // Save a person edit to Firestore
