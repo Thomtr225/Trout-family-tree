@@ -80,10 +80,9 @@
 
 
   /* ── Profile photo edit overlay ── */
-  .modal-photo-wrap { position: relative; flex-shrink: 0; cursor: pointer; }
-  .modal-photo-wrap .photo-edit-btn { position: absolute; bottom: 2px; right: 2px; width: 26px; height: 26px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-  .modal-photo-wrap:hover .photo-edit-btn { opacity: 1; }
-  .modal-photo-wrap .photo-edit-btn.always { opacity: 1; pointer-events: auto; }
+  .modal-photo-wrap { position: relative; flex-shrink: 0; cursor: pointer; display: inline-block; }
+  .modal-photo-wrap .photo-edit-btn { position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); border: 2px solid #fff; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer; z-index: 10; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+  .modal-photo-wrap:hover .modal-photo { opacity: 0.85; }
   /* ── Person detail modal ── */
   .modal-backdrop { position: fixed; inset: 0; background: rgba(28,43,58,0.6); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 1rem; }
   .modal-backdrop.hidden { display: none; }
@@ -844,11 +843,11 @@ function openPerson(id) {
   });
 
   const canEdit = STATE.role === 'admin';
-  const pencilBtn = canEdit
-    ? `<div class="photo-edit-btn always" onclick="event.stopPropagation();triggerPrimaryPhotoUpload('${id}')" title="Change photo">✏️</div>`
-    : '';
   const photoWrap = canEdit
-    ? `<div class="modal-photo-wrap" onclick="triggerPrimaryPhotoUpload('${id}')"><div class="modal-photo">${photoHTML}</div>${pencilBtn}</div>`
+    ? `<div class="modal-photo-wrap" onclick="triggerPrimaryPhotoUpload('${id}')">
+        <div class="modal-photo">${photoHTML}</div>
+        <div class="photo-edit-btn" title="Change photo">✏</div>
+       </div>`
     : `<div class="modal-photo">${photoHTML}</div>`;
 
   document.getElementById('modal-header').innerHTML = `
