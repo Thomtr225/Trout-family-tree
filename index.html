@@ -247,6 +247,8 @@
     .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -535,6 +537,69 @@ const CONFIG = {
   GEDCOM_URL: 'TroutFamilyTree_local.ged',
   PHOTOS_URLS: ['photos_base64_1.json', 'photos_base64_2.json'],  // add more if needed
 };
+
+
+// ═══════════════════════════════════════════
+// FIREBASE
+// ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyCeq6z518_1UGeHNFuyj3AkxRYYxZcxtas",
+  authDomain: "trout-family-tree.firebaseapp.com",
+  projectId: "trout-family-tree",
+  storageBucket: "trout-family-tree.firebasestorage.app",
+  messagingSenderId: "674187026064",
+  appId: "1:674187026064:web:6f4463bf021b0002a30215"
+};
+
+let db = null;
+function initFirebase() {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log('Firebase connected');
+  } catch(e) {
+    console.warn('Firebase init failed:', e.message);
+  }
+}
+
+// Save a person edit to Firestore
+async function fbSavePerson(id, data) {
+  if (!db) return;
+  try {
+    const docId = id.replace(/[@]/g, '');
+    await db.collection('individuals').doc(docId).set(data, { merge: true });
+  } catch(e) { console.warn('Firebase save failed:', e.message); }
+}
+
+// Save a photo array to Firestore
+async function fbSavePhotos(id, photos) {
+  if (!db) return;
+  try {
+    const docId = id.replace(/[@]/g, '');
+    // Store only first photo in firebase (base64 too large for multiple)
+    // Full array stays in localStorage
+    await db.collection('photos').doc(docId).set({ 
+      hasPhotos: true, 
+      count: photos.length,
+      primary: photos[0] || null 
+    }, { merge: true });
+  } catch(e) { console.warn('Firebase photo save failed:', e.message); }
+}
+
+// Load all person edits from Firestore and apply to STATE
+async function fbLoadEdits() {
+  if (!db) return;
+  try {
+    const snap = await db.collection('individuals').get();
+    snap.forEach(doc => {
+      const id = '@' + doc.id + '@';
+      if (STATE.people[id]) {
+        Object.assign(STATE.people[id], doc.data());
+      }
+    });
+    console.log(`Loaded ${snap.size} edits from Firebase`);
+  } catch(e) { console.warn('Firebase load failed:', e.message); }
+}
 
 // ═══════════════════════════════════════════
 // STATE
@@ -1236,6 +1301,7 @@ function handlePhotoUpload(event) {
       } catch(err) {}
       if (loaded === files.length) {
         uploadReplaceIndex = -1;
+        fbSavePhotos(id, STATE.photos[id]);
         showToast(replaceIdx >= 0 ? 'Profile photo updated' : `${loaded} photo${loaded>1?'s':''} added`);
         openPerson(id);
         buildGallery();
@@ -1501,12 +1567,24 @@ function savePersonEdit() {
   const notesText = document.getElementById('edit-notes').value.trim();
   p.notes = notesText ? notesText.split('\n').filter(Boolean) : [];
 
-  // Save to localStorage so edits persist across page refresh
+  // Save to localStorage
   try {
     const edits = JSON.parse(localStorage.getItem('trout-edits') || '{}');
     edits[id] = p;
     localStorage.setItem('trout-edits', JSON.stringify(edits));
   } catch(e) {}
+
+  // Save to Firebase
+  fbSavePerson(id, {
+    given: p.given, surname: p.surname, name: p.name,
+    sex: p.sex, prefix: p.prefix || '', suffix: p.suffix || '',
+    marriedName: p.marriedName || '', nickname: p.nickname || '',
+    birth: p.birth || {}, death: p.death || {},
+    deathCause: p.deathCause || '', burial: p.burial || '',
+    notes: p.notes || [], living: p.living || false,
+    updatedAt: new Date().toISOString(),
+    updatedBy: STATE.role
+  });
 
   closeEditModalBtn();
   showToast('Changes saved');
