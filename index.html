@@ -289,7 +289,8 @@
       <button class="nav-tab" onclick="showPanel('photos')">Photos</button>
       <button class="nav-tab" onclick="showPanel('bio')">AI Bio</button>
     </div>
-    <button class="nav-user" onclick="logout()" id="nav-user-btn">Sign out</button>
+    <span id="db-status-indicator" style="font-size:0.75rem;font-weight:600;padding:0.2rem 0.65rem;border-radius:10px;background:#1a3a2a;color:#4caf84;white-space:nowrap;margin-right:0.5rem;">⬤ Connecting…</span>
+  <button class="nav-user" onclick="logout()" id="nav-user-btn">Sign out</button>
   </nav>
 
   <!-- Tree panel -->
@@ -304,7 +305,6 @@
         <option value="6">6 generations</option>
       </select>
       <span id="tree-title" style="color:var(--muted);font-size:0.85rem;margin-left:auto;"></span>
-      <span id="db-status-indicator" style="font-size:0.78rem;font-weight:600;padding:0.25rem 0.75rem;border-radius:12px;background:#1a3a2a;color:#4caf84;white-space:nowrap;">⬤ Connecting…</span>
     </div>
     <div id="tree-canvas-wrap">
       <div class="tree-empty" id="tree-empty">
