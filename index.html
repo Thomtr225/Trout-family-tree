@@ -557,10 +557,11 @@ function initFirebase() {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
     console.log('Firebase connected');
-    showDbStatus('✓ Connected to Trout Family Tree database', 'success');
+    // Delay so nav bar is visible first
+    setTimeout(() => showDbStatus('✓ Connected to Trout Family Tree database', 'success'), 600);
   } catch(e) {
     console.warn('Firebase init failed:', e.message);
-    showDbStatus('⚠ Running in offline mode', 'warning');
+    setTimeout(() => showDbStatus('⚠ Running in offline mode', 'warning'), 600);
   }
 }
 
@@ -569,19 +570,27 @@ function showDbStatus(msg, type) {
   if (!bar) return;
   bar.textContent = msg;
   bar.style.display = 'block';
+  bar.style.opacity = '1';
+  bar.style.transition = 'none';
   if (type === 'success') {
     bar.style.background = '#1a3a2a';
     bar.style.color = '#4caf84';
+    bar.style.borderBottom = '1px solid #2d5a3d';
   } else {
     bar.style.background = '#3a2a1a';
     bar.style.color = '#c49a2a';
+    bar.style.borderBottom = '1px solid #5a3d1a';
   }
-  // Fade out after 4 seconds
+  // Fade out after 5 seconds
   setTimeout(() => {
-    bar.style.transition = 'opacity 1s';
+    bar.style.transition = 'opacity 1.5s';
     bar.style.opacity = '0';
-    setTimeout(() => { bar.style.display = 'none'; bar.style.opacity = '1'; }, 1000);
-  }, 4000);
+    setTimeout(() => { 
+      bar.style.display = 'none'; 
+      bar.style.opacity = '1'; 
+      bar.style.transition = 'none';
+    }, 1500);
+  }, 5000);
 }
 
 // Save a person edit to Firestore
